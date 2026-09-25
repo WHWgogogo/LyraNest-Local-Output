@@ -1,0 +1,5 @@
+bin/
+*.exe
+.gocache/
+.gotmp/
+coverage.out

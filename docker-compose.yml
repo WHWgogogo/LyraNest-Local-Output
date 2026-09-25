@@ -1,0 +1,32 @@
+# LyraNest Local Output - Docker Compose 部署配置
+#
+# 重要提示：devices 必须挂载宿主机的物理声卡设备 "/dev/snd:/dev/snd"！
+# 本插件通过 ALSA / MPD 直接与硬件声卡（3.5mm 耳机孔、主板音频口或 USB DAC）进行底层通信。
+# 若宿主机没有物理音频设备，容器会报错并退出。
+
+services:
+  local-output:
+    image: ghcr.io/whwgogogo/lyranest-local-output:0.1.0
+    container_name: lyranest-local-output
+    restart: unless-stopped
+    devices:
+      - "/dev/snd:/dev/snd"
+    ports:
+      - "${LOCAL_OUTPUT_HOST_PORT:-8091}:8091"
+    volumes:
+      - "${LOCAL_OUTPUT_MUSIC_DIR:-./music}:/music:ro"
+      - "${LOCAL_OUTPUT_DATA_DIR:-./data}:/data:rw"
+    environment:
+      LOCAL_OUTPUT_PORT: "8091"
+      ALSA_CARD: "${ALSA_CARD:-0}"
+      ALSA_PCM_DEVICE: "${ALSA_PCM_DEVICE:-0}"
+      MPD_MIXER_CONTROL: "${MPD_MIXER_CONTROL:-Headphone}"
+      LOCAL_OUTPUT_LOG_LEVEL: "info"
+      TZ: "Asia/Shanghai"
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/local-output", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

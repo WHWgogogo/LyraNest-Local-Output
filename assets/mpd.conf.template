@@ -1,0 +1,36 @@
+# LyraNest 本机音频输出 · MPD 配置模板
+#
+# 由自研外壳 services/local-output 在启动时渲染为 /etc/mpd.conf。
+# 变量占位符使用 Go text/template 语法，请勿手工修改容器内生成的文件。
+#
+# 关键约束（来自 35 号实机报告的实测结论）：
+#   · device "hw:0,0"        模拟声卡唯一立体声输出通路（3.5mm 耳机孔 / 内建扬声器）
+#   · auto_resample "no"     设备原生支持 44.1/48/96/192k，不做重采样，保持 bit-perfect
+#   · 不设置 format          让 MPD 按曲目实际采样率打开设备（设死会强制重采样）
+#   · bind_to_address 127.0.0.1  MPD 控制口只给同容器的自研外壳使用，不对局域网暴露
+#
+# 音量：mixer_type "hardware" + mixer_control 指向宿主实际存在的 simple mixer
+# 控件（本机为 Headphone）。若该控件不存在（例如某些 USB DAC），外壳会自动
+# 回退为 software mixer，避免 MPD 因找不到控件而拒绝启动。
+
+music_directory     "{{.MusicDirectory}}"
+playlist_directory  "{{.PlaylistDirectory}}"
+db_file             "{{.DBFile}}"
+state_file          "{{.StateFile}}"
+bind_to_address     "{{.BindAddress}}"
+port                "{{.Port}}"
+{{if .LogFile}}log_file            "{{.LogFile}}"
+{{end}}filesystem_charset  "UTF-8"
+auto_update         "no"
+restore_paused      "no"
+
+audio_output {
+    type            "alsa"
+    name            "LyraNest 本机输出"
+    device          "{{.Device}}"
+{{if .MixerControl}}    mixer_type      "hardware"
+    mixer_device    "{{.MixerDevice}}"
+    mixer_control   "{{.MixerControl}}"
+{{else}}    mixer_type      "software"
+{{end}}    auto_resample   "no"
+}
