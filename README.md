@@ -10,6 +10,7 @@
   <a href="https://github.com/WHWgogogo/LyraNest-Local-Output/releases/latest"><img src="https://img.shields.io/github/v/release/WHWgogogo/LyraNest-Local-Output?display_name=tag&label=Release" alt="Latest Release" /></a>
   <a href="https://github.com/WHWgogogo/LyraNest-Local-Output/releases/latest"><img src="https://img.shields.io/badge/Platform-fnOS%20%7C%20Synology%20%7C%20QNAP%20%7C%20TerraMaster%20%7C%20UGNAS%20%7C%20CWNAS%20%7C%20Docker-4f46e5" alt="Platforms" /></a>
   <a href="https://github.com/WHWgogogo/LyraNest-Local-Output/releases/latest/download/docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-orange.svg" alt="License: CC BY-NC-SA 4.0" /></a>
 </p>
 
 <p align="center">
@@ -177,3 +178,19 @@ cat /proc/asound/cards
 - [LyraNest AirPlay Bridge](https://github.com/WHWgogogo/LyraNest-AirPlay-Bridge)：AirPlay 2 无线投送桥接插件。
 - [LyraNest Xiaoai Bridge](https://github.com/WHWgogogo/LyraNest-Xiaoai-Bridge)：小爱音箱语音联动与投送桥接插件。
 - [LyraNest Community](https://github.com/WHWgogogo/LyraNest-Community)：开源社区版。
+
+---
+
+## 开源许可与版权声明 (License)
+
+本项目基于 **[CC BY-NC-SA 4.0 (知识共享 署名-非商业性使用-相同方式共享 4.0 国际许可协议)](LICENSE)** 开源。
+
+### 商业限制特别说明：
+1. **个人免费**：仅供个人学习、研究、家庭局域网与非营利性 NAS 环境免费使用。
+2. **严禁商用**：未经作者书面明确许可，严禁任何个人或组织将本项目（包括源码、二进制文件、NAS 原生安装包、Docker 镜像）：
+   - 用于任何直接或间接的商业营利行为；
+   - 捆绑打包进任何收费硬件设备、品牌 NAS 主机、定制工控机或付费商业软件中；
+   - 在电商平台（如淘宝、闲鱼、拼多多等）转售、倒卖安装包或提供付费安装/调试服务；
+   - 作为商业公司闭源产品的组成部分。
+3. **商业合作**：如有商业集成、预装或定制开发需求，请联系作者获取商业授权。
+

@@ -1,0 +1,44 @@
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License
+
+Copyright (c) 2026 WHWgogogo (LyraNest)
+
+========================================================================
+特别声明与商业限制条款 (Special Terms on Non-Commercial Use)
+========================================================================
+
+本项目基于 Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International License (CC BY-NC-SA 4.0) 进行许可。
+
+1. 个人与非商业免费使用：
+   - 允许个人用户出于学习、测试、研究或家庭自用目的，免费获取、运行、
+     修改及二次分发本项目的源代码、编译产物（包括各平台安装包与 Docker 镜像）。
+   - 基于本项目修改的衍生作品，必须同样以 CC BY-NC-SA 4.0 协议开源并保留原作者署名。
+
+2. 严格禁止商业用途：
+   未经原作者书面明确授权，严禁任何个人、团体或商业机构将本项目（包括但不限于
+   源代码、二进制文件、NAS 原生安装包、Docker 镜像、文档及衍生作品）用于任何形式
+   的直接或间接商业获利行为，包括但不限于：
+   - 任何形式的收费销售、转售、租赁或商业订阅；
+   - 在电商平台（包括但不限于淘宝、闲鱼、拼多多等）上架、倒卖安装包或提供付费安装/调试服务；
+   - 将本项目打包、内置或捆绑至任何收费硬件设备、品牌 NAS 主机、定制工控机或付费商业软件中；
+   - 将本项目作为营利性云服务、付费托管服务或商业 SaaS 系统的组成部分。
+
+3. 商业授权：
+   如企业、硬件制造商或集成商有商业集成、预装合作或定制开发需求，请联系原作者
+   以获得合法的单独书面商业许可。
+
+========================================================================
+CC BY-NC-SA 4.0 Official Summary
+========================================================================
+
+You are free to:
+- Share — copy and redistribute the material in any medium or format
+- Adapt — remix, transform, and build upon the material
+
+Under the following terms:
+- Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+- NonCommercial — You may not use the material for commercial purposes.
+- ShareAlike — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+- No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+
+Full Legal Code: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
