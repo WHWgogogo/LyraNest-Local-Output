@@ -175,5 +175,5 @@ cat /proc/asound/cards
 
 - [LyraNest 主项目](https://github.com/WHWgogogo/LyraNest)：LyraNest 官方全平台自托管音乐服务。
 - [LyraNest AirPlay Bridge](https://github.com/WHWgogogo/LyraNest-AirPlay-Bridge)：AirPlay 2 无线投送桥接插件。
-- [LyraNest Xiaomi Bridge](https://github.com/WHWgogogo/LyraNest-Xiaomi-Bridge)：小爱音箱语音联动与投送桥接插件。
+- [LyraNest Xiaoai Bridge](https://github.com/WHWgogogo/LyraNest-Xiaoai-Bridge)：小爱音箱语音联动与投送桥接插件。
 - [LyraNest Community](https://github.com/WHWgogogo/LyraNest-Community)：开源社区版。
