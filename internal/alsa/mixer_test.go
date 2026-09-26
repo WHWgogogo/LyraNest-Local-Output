@@ -269,3 +269,41 @@ func TestSetVolumeAndRefresh(t *testing.T) {
 		t.Fatalf("refreshed VolumePercent = %d, want 55", refreshed.VolumePercent)
 	}
 }
+
+func TestInitSupportsPCMControlOnly(t *testing.T) {
+	fake := newFakeAmixer()
+	fake.controls = []string{"PCM"}
+	fake.switches = map[string]string{"PCM": "on"}
+	fake.percent = map[string]int{"PCM": 80}
+	mixer := New(testConfig(), testLogger()).WithRunner(fake.run)
+
+	state, err := mixer.Init(context.Background())
+	if err != nil {
+		t.Fatalf("Init on an ARM card with PCM only: %v", err)
+	}
+	if state.EffectiveControl != "PCM" {
+		t.Fatalf("EffectiveControl = %q, want PCM", state.EffectiveControl)
+	}
+	if !state.Verified {
+		t.Fatal("state.Verified must be true for PCM")
+	}
+}
+
+func TestInitToleratesCardsWithoutAnyHardwareMixer(t *testing.T) {
+	fake := newFakeAmixer()
+	fake.controls = []string{}
+	fake.switches = map[string]string{}
+	fake.percent = map[string]int{}
+	mixer := New(testConfig(), testLogger()).WithRunner(fake.run)
+
+	state, err := mixer.Init(context.Background())
+	if err != nil {
+		t.Fatalf("Init on a card without hardware mixer: %v", err)
+	}
+	if state.EffectiveControl != "" {
+		t.Fatalf("EffectiveControl = %q, want empty (software volume fallback)", state.EffectiveControl)
+	}
+	if !state.Verified {
+		t.Fatal("state.Verified must be true when falling back to software volume")
+	}
+}

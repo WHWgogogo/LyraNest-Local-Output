@@ -139,7 +139,7 @@ func run() error {
 		logger.Error("could not load the MPD configuration template", "error", err)
 		return &exitError{code: exitKernelFailed, err: err}
 	}
-	manager.SetMixerControl(mixerControlFor(report, cfg))
+	manager.SetMixerControl(mixerControlFor(report, cfg, mixerState.EffectiveControl))
 	if err := manager.Start(ctx); err != nil {
 		logger.Error("could not start the MPD playback kernel", "error", err)
 		return &exitError{code: exitKernelFailed, err: err}
@@ -204,19 +204,20 @@ func run() error {
 // mixerControlFor decides whether MPD may use a hardware mixer. MPD refuses to
 // start when a configured hardware mixer control does not exist, so an absent
 // control degrades to MPD's software mixer instead of a crash loop.
-func mixerControlFor(report alsa.Report, cfg config.Config) string {
-	if strings.TrimSpace(cfg.MPDMixerControl) == "" {
-		return ""
-	}
-	for _, control := range report.ControlNames {
-		if control == cfg.MPDMixerControl {
-			return cfg.MPDMixerControl
+func mixerControlFor(report alsa.Report, cfg config.Config, effectiveControl string) string {
+	if strings.TrimSpace(cfg.MPDMixerControl) != "" {
+		for _, control := range report.ControlNames {
+			if control == cfg.MPDMixerControl {
+				return cfg.MPDMixerControl
+			}
 		}
 	}
-	if len(report.ControlNames) == 0 {
-		// The control list could not be read; keep the configured value so the
-		// behaviour matches the documented default.
-		return cfg.MPDMixerControl
+	if effectiveControl != "" {
+		for _, control := range report.ControlNames {
+			if control == effectiveControl {
+				return effectiveControl
+			}
+		}
 	}
 	return ""
 }

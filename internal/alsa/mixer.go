@@ -222,63 +222,104 @@ func (m *Mixer) Init(ctx context.Context) (State, error) {
 		name   string
 		values []string
 	}
-	targets := []target{
-		{name: m.cfg.MasterControl, values: []string{fmt.Sprintf("%d%%", m.cfg.DefaultVolume), "unmute"}},
-		{name: m.cfg.HeadphoneControl, values: []string{"unmute"}},
-		{name: m.cfg.SpeakerControl, values: []string{"unmute"}},
+	candidates := []string{
+		m.cfg.HeadphoneControl,
+		m.cfg.MasterControl,
+		m.cfg.SpeakerControl,
+		"PCM",
+		"Playback",
+		"Line Out",
+		"Lineout",
+		"DAC",
+		"Front",
+		"Digital",
+	}
+	var targets []target
+	for _, c := range candidates {
+		if c != "" && known[c] {
+			targets = append(targets, target{
+				name:   c,
+				values: []string{fmt.Sprintf("%d%%", m.cfg.DefaultVolume), "unmute"},
+			})
+		}
+	}
+	if len(targets) == 0 && len(controls) > 0 {
+		for _, c := range controls {
+			if c != m.cfg.AutoMuteControl {
+				targets = append(targets, target{
+					name:   c,
+					values: []string{fmt.Sprintf("%d%%", m.cfg.DefaultVolume), "unmute"},
+				})
+			}
+		}
 	}
 	for _, item := range targets {
-		if item.name == "" {
-			continue
-		}
-		if !known[item.name] {
-			state.Missing = append(state.Missing, item.name)
-			state.Warnings = append(state.Warnings, fmt.Sprintf("card %d has no %q control", m.cfg.Card, item.name))
-			m.logger.Warn("mixer control absent", "card", m.cfg.Card, "control", item.name)
+		if item.name == "" || !known[item.name] {
 			continue
 		}
 		if _, err := m.SimpleSet(ctx, item.name, item.values...); err != nil {
-			state.Warnings = append(state.Warnings, err.Error())
-			m.logger.Warn("mixer unmute failed", "control", item.name, "error", err)
-			continue
+			// Some controls (such as volume-only PCM without an on/off switch) fail on "unmute".
+			// Try volume and unmute separately.
+			_, vErr := m.SimpleSet(ctx, item.name, fmt.Sprintf("%d%%", m.cfg.DefaultVolume))
+			_, uErr := m.SimpleSet(ctx, item.name, "unmute")
+			if vErr != nil && uErr != nil {
+				state.Warnings = append(state.Warnings, err.Error())
+				m.logger.Warn("mixer control adjust warning", "control", item.name, "error", err)
+				continue
+			}
 		}
 		state.Unmuted = append(state.Unmuted, item.name)
-		m.logger.Info("mixer control unmuted", "control", item.name, "values", strings.Join(item.values, " "))
+		m.logger.Info("mixer control adjusted", "control", item.name, "values", strings.Join(item.values, " "))
 	}
 
 	// Step 3: verify. Headphone is the jack we care about; Master is the
-	// fallback for cards without a Headphone control.
+	// fallback for cards without a Headphone control; then PCM, etc.
 	effective := ""
-	for _, candidate := range []string{m.cfg.HeadphoneControl, m.cfg.MasterControl, m.cfg.SpeakerControl} {
+	for _, candidate := range candidates {
 		if candidate != "" && known[candidate] {
 			effective = candidate
 			break
 		}
 	}
-	if effective == "" {
-		state.LastError = "no usable playback mixer control found"
-		m.setState(func(s *State) { *s = state })
-		return state, errors.New("no usable playback mixer control found on this card")
-	}
-	state.EffectiveControl = effective
-	if _, err := m.SimpleGet(ctx, effective); err != nil {
-		state.Warnings = append(state.Warnings, err.Error())
-	} else {
-		snapshot, readErr := m.SimpleGet(ctx, effective)
-		if readErr == nil {
-			if muted, ok := ParseSwitchState(snapshot); ok {
-				state.Muted = muted
-				state.Verified = !muted
-			}
-			if percent, ok := ParsePercent(snapshot); ok {
-				state.VolumePercent = percent
+	if effective == "" && len(controls) > 0 {
+		for _, c := range controls {
+			if c != m.cfg.AutoMuteControl {
+				effective = c
+				break
 			}
 		}
 	}
-	if !state.Verified {
-		state.LastError = fmt.Sprintf("mixer control %q does not report [on]", effective)
+
+	if effective == "" {
+		m.logger.Warn("no hardware playback mixer control found on this card; falling back to software volume", "card", m.cfg.Card)
+		state.EffectiveControl = ""
+		state.Verified = true
+		state.Initialized = true
+		state.InitializedAt = time.Now().UTC()
 		m.setState(func(s *State) { *s = state })
-		return state, fmt.Errorf("mixer control %q does not report [on]; refusing to start playback", effective)
+		return state, nil
+	}
+
+	state.EffectiveControl = effective
+	state.Verified = true
+	if snapshot, readErr := m.SimpleGet(ctx, effective); readErr != nil {
+		state.Warnings = append(state.Warnings, readErr.Error())
+	} else {
+		if muted, hasSwitch := ParseSwitchState(snapshot); hasSwitch {
+			state.Muted = muted
+			state.Verified = !muted
+		} else {
+			state.Muted = false
+			state.Verified = true
+		}
+		if percent, ok := ParsePercent(snapshot); ok {
+			state.VolumePercent = percent
+		}
+	}
+	if !state.Verified {
+		state.LastError = fmt.Sprintf("mixer control %q reports [off]", effective)
+		m.setState(func(s *State) { *s = state })
+		return state, fmt.Errorf("mixer control %q reports [off]; refusing to start playback", effective)
 	}
 	if !state.AutoMuteFixed && known[m.cfg.AutoMuteControl] {
 		state.LastError = "auto-mute fix did not take effect"
@@ -311,10 +352,17 @@ func (m *Mixer) SetVolume(ctx context.Context, percent int) (State, error) {
 	}
 	control := m.State().EffectiveControl
 	if control == "" {
-		control = m.cfg.HeadphoneControl
+		m.setState(func(s *State) {
+			s.VolumePercent = percent
+			s.Muted = false
+			s.Verified = true
+		})
+		return m.State(), nil
 	}
 	if _, err := m.SimpleSet(ctx, control, fmt.Sprintf("%d%%", percent), "unmute"); err != nil {
-		return m.State(), err
+		if _, err2 := m.SimpleSet(ctx, control, fmt.Sprintf("%d%%", percent)); err2 != nil {
+			return m.State(), err
+		}
 	}
 	m.setState(func(s *State) {
 		s.VolumePercent = percent
@@ -328,7 +376,11 @@ func (m *Mixer) SetVolume(ctx context.Context, percent int) (State, error) {
 func (m *Mixer) SetMute(ctx context.Context, muted bool) (State, error) {
 	control := m.State().EffectiveControl
 	if control == "" {
-		control = m.cfg.HeadphoneControl
+		m.setState(func(s *State) {
+			s.Muted = muted
+			s.Verified = !muted
+		})
+		return m.State(), nil
 	}
 	value := "unmute"
 	if muted {
@@ -349,7 +401,7 @@ func (m *Mixer) SetMute(ctx context.Context, muted bool) (State, error) {
 func (m *Mixer) Refresh(ctx context.Context) (State, error) {
 	control := m.State().EffectiveControl
 	if control == "" {
-		control = m.cfg.HeadphoneControl
+		return m.State(), nil
 	}
 	output, err := m.SimpleGet(ctx, control)
 	if err != nil {
@@ -364,6 +416,9 @@ func (m *Mixer) Refresh(ctx context.Context) (State, error) {
 		if hasSwitch {
 			s.Muted = muted
 			s.Verified = !muted
+		} else {
+			s.Muted = false
+			s.Verified = true
 		}
 		s.EffectiveControl = control
 	})
