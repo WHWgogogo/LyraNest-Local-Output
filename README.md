@@ -181,6 +181,16 @@ cat /proc/asound/cards
 
 ---
 
+## 赞助支持
+
+如果您觉得 LyraNest 对您有所帮助，欢迎为爱发电，支持项目的持续维护与更新！
+
+<p align="center">
+  <img src="docs/images/sponsor-qrcode.jpg" alt="LyraNest 赞赏码" width="220" />
+</p>
+
+---
+
 ## 开源许可与版权声明 (License)
 
 本项目基于 **[CC BY-NC-SA 4.0 (知识共享 署名-非商业性使用-相同方式共享 4.0 国际许可协议)](LICENSE)** 开源。
